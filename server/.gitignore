@@ -43,3 +43,6 @@ Thumbs.db
 
 # SQLite DBs
 *.sqlite3
+
+database.db
+*.cpython-313.pyc
