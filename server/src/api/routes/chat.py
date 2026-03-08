@@ -1,12 +1,14 @@
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from langgraph.graph.state import CompiledStateGraph
 
 from db.session import get_db
-from db.models import SessionRecord, MessageRecord
-from schemas.chat import (SendMessageRequest,
+from db.models import SessionRecord, HumanMessageRecord, AIMessageRecord
+from schemas.chat import (
+    SendMessageRequest,
     SendMessageResponse,
     ChatMessage,
 )
@@ -70,23 +72,22 @@ async def send_chat_message(
         raise HTTPException(status_code=500, detail="Error executing AI Graph.")
 
     # 4. Save the Messages to the Database
-    user_record = MessageRecord(
+    user_record = HumanMessageRecord(
         session_id=req.sessionId,
-        role="user",
         content=req.content,
         timestamp=current_time,
     )
+    db.add(user_record)
+    db.commit()
 
-    ai_record = MessageRecord(
-        session_id=req.sessionId,
-        role="assistant",
+    ai_record = AIMessageRecord(
+        human_message_id=user_record.id,
         content=ai_response_text,
         timestamp=current_time,
         model=req.model_name,
-        mode=req.mode
+        mode=req.mode,
     )
-
-    db.add_all([user_record, ai_record])
+    db.add(ai_record)
     db.commit()
 
     # 5. Return the perfectly typed response to the frontend

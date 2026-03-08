@@ -1,10 +1,10 @@
 from sqlalchemy import select, desc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from fastapi import APIRouter, Depends, Request, HTTPException
 from langgraph.graph.state import CompiledStateGraph
 
-from db.models import SessionRecord
+from db.models import HumanMessageRecord, SessionRecord
 from db.session import get_db
 
 # 1. Export the router and the prefix to match your RouteEntry format
@@ -28,21 +28,41 @@ async def get_latest_state(
     #     raise HTTPException(status_code=400, detail="Checkpointer required.")
 
     try:
-        # state = graph.get_state(config)
-        stmt = select(SessionRecord).order_by(desc(SessionRecord.date))
-        records = db.scalars(stmt).all()
-        return [
-            {
-                "id": record.id,
-                "title": record.title,
-                "date": record.date,
-                "messages": [message.serialize() for message in record.messages],
-            }
-            for record in records
-        ]
+        stmt = (
+            select(SessionRecord)
+            .options(
+                selectinload(SessionRecord.messages)
+                .selectinload(HumanMessageRecord.response)
+            )
+            .order_by(desc(SessionRecord.date))
+        )
+        sessions = db.scalars(stmt).all()
 
-        return []
+        chats = []
+        
+        for session in sessions:
+            formatted_messages = []
+            
+            for human_msg in session.messages:
+                h_dict = human_msg.serialize(include_relationships=False)
+                formatted_messages.append(human_msg.serialize(include_relationships=False))
+                
+                if human_msg.response:
+                    ai_dict = human_msg.response.serialize(include_relationships=False)
+                    ai_dict["role"] = "assistant"
+                    
+                    formatted_messages.append(ai_dict)
+
+            chats.append({
+                "id": str(session.id),
+                "title": session.title,
+                "date": session.date,
+                "messages": formatted_messages,
+            })
+
+        return chats
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
