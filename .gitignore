@@ -1,0 +1,59 @@
+# Root .gitignore for monorepo (client + server)
+
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+.env
+.env.*
+/.vite
+/dist
+/build
+.DS_Store
+
+# Vite/Bun
+.client/.bun
+client/.turbo
+
+# Python
+server/__pycache__/
+server/**/*.pyc
+server/.venv/
+server/env/
+server/venv/
+server/.pytest_cache/
+server/.mypy_cache/
+server/.coverage
+server/.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# OneDrive temp files
+~$*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Misc
+coverage/
+.cache/
+.pnp/
+
+# Allow local config (uncomment to ignore everything except tracked files)
+# .gitignore_global
