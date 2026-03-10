@@ -1,5 +1,7 @@
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph
 from langgraph._internal._runnable import RunnableCallable
+
+import asyncio
 from typing import Callable, Any, Self, Optional
 
 
@@ -8,6 +10,7 @@ class VirtualNode:
         self,
         name: str,
         func: RunnableCallable,
+        on_post_execute: Callable[[Self], Any],
         next_node: Optional[Self] = None,
         breakpoint: Optional[bool] = False,
     ):
@@ -16,6 +19,10 @@ class VirtualNode:
         self.func = func
         self.next = next_node
         self.breakpoint = breakpoint
+        self.input_state: dict[str, Any] = {}
+        self.output_state: dict[str, Any] = {}
+        self.on_post_execute = on_post_execute
+        self.error = ""
 
     def build(self, builder: StateGraph):
         builder.add_node(self.name, self)
@@ -23,6 +30,14 @@ class VirtualNode:
     def __repr__(self) -> str:
         return f'VirtualNode(name="{self.name}", func={self.func})'
 
-    def __call__(self, *args, **kwds):
-        print(f"Calling {self.name}")
-        return self.func(*args, **kwds)
+    async def __call__(self, *args, **kwds):
+        self.input_state = args[0]
+        try:
+            self.output_state = self.func(*args, **kwds)
+            await self.on_post_execute(self)
+            
+            return self.output_state
+        except Exception as err:
+            self.error = err
+        return self.input_state
+ 

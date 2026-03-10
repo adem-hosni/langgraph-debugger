@@ -1,0 +1,49 @@
+from langgraph.graph.state import CompiledStateGraph
+
+from .virtual_graph import VirtualGraph
+from .virtual_node import VirtualNode
+
+import asyncio
+from typing import Any, TypeAlias, Callable, Awaitable
+
+
+GraphState: TypeAlias = dict[str, Any]
+
+
+class Executor:
+    def __init__(
+        self,
+        graph: CompiledStateGraph,
+        state_schema: Any,
+        state_update_func: Any,
+    ):
+        self.virtual_graph: VirtualGraph | None = None
+        self.graph: CompiledStateGraph | None = graph
+        self._state_schema = state_schema
+        self._state_update_func = state_update_func
+
+    def set_virtual_graph(self, virtual_graph: VirtualGraph):
+        self.virtual_graph = virtual_graph
+
+    def _compile_graph(self) -> None:
+        nodes = self.virtual_graph.build_virtual_nodes(self.graph.builder.nodes)
+        self.graph = self.virtual_graph.compile_graph(
+            self._state_schema, nodes, self.graph.builder.edges
+        )
+
+    async def execute(self, state: GraphState):
+        self._compile_graph()
+        await self.graph.ainvoke(state, stream_mode="updates")
+
+    async def on_node_executed(self, node: VirtualNode):
+        print("running", node.name, node.output_state)
+        packet = {
+            "nodeId": node.name,
+            "state": node.output_state,
+            "input": node.input_state,
+            "output": node.output_state,
+            "error": node.error,
+            "hasBreakpoint": node.breakpoint,
+            "status": "running",
+        }
+        await self._state_update_func(packet)

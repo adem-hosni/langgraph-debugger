@@ -1,17 +1,17 @@
-from typing import Any
+from typing import Callable, Coroutine, Any
 import traceback
 from langgraph.graph.state import CompiledStateGraph
 
 # Import the Pydantic models we just built
 from schemas.graph import GraphData, NodeFlow, EdgeFlow, GraphNodeData, NodePosition
 from debugger.virtual_graph import VirtualGraph
+from debugger.executor import Executor
 
-
-virtual_graph: VirtualGraph | None = None
-graph: CompiledStateGraph | None = None
 
 async def route_action(
-    action_context: dict[str, Any], context: dict[str, CompiledStateGraph | Any]
+    action_context: dict[str, Any],
+    context: dict[str, CompiledStateGraph | Any],
+    send: Callable[[str], Coroutine[Any, Any, None]],
 ) -> dict[str, Any]:
     """
     Routes incoming WebSocket messages to the appropriate graph actions.
@@ -29,24 +29,32 @@ async def route_action(
                 if not result["data"]:
                     result["type"] = "error"
                     result["message"] = "Failed to fetch nodes!"
+                    return result
+
+                context["executor"] = Executor(
+                    context["graph"],
+                    context["graph_state_schema"],
+                    state_update_func=lambda data: send(
+                        {"type": "node_state_update", "data": data}
+                    ),
+                )
+                virtual_graph = VirtualGraph(
+                    context["graph"], context["executor"].on_node_executed
+                )
+                context["executor"].set_virtual_graph(virtual_graph)
 
             case "run":
                 print("running nodes...")
-                virtual_graph = VirtualGraph(context["graph"])
 
-                nodes = virtual_graph.build_virtual_nodes(context["graph"].builder.nodes)
-                graph = virtual_graph.compile_graph(
-                    context["graph_state_schema"], nodes, context["graph"].builder.edges
-                )
-                
-                graph.st
+                if context.get("executor"):
+                    await send({"type": "status", "message": "Execution Started..."})
+                    await context["executor"].execute({"message": "0"})
+                else:
+                    result["type"] = "error"
+                    result["message"] = "Failed to execute graph!"
 
-                result["type"] = "status"
-                result["message"] = "Execution Started.."
-            
             case "update_state":
                 print("updating state...")
-                
 
             case _:
                 result["type"] = "error"

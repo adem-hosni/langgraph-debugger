@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Callable, Any
 
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.typing import ContextT
@@ -9,8 +9,9 @@ from .virtual_node import VirtualNode
 
 
 class VirtualGraph:
-    def __init__(self, graph: CompiledStateGraph):
+    def __init__(self, graph: CompiledStateGraph, on_node_executed: Callable[[VirtualNode], Any]):
         self.graph = graph
+        self._on_node_executed = on_node_executed
 
     def build_virtual_nodes(
         self, nodes: dict[str, StateNodeSpec[Any, None]]
@@ -45,7 +46,7 @@ class VirtualGraph:
     ) -> list[VirtualNode]:
         if isinstance(node.runnable, CompiledStateGraph):
             return self.build_virtual_nodes(node.runnable.builder.nodes)
-        return VirtualNode(node_id, node.runnable)
+        return VirtualNode(node_id, node.runnable.func, self._on_node_executed)
 
     def compile_graph(
         self, state: Any, virtual_nodes: VirtualNode, edges: set[tuple[str, str]]
@@ -55,7 +56,6 @@ class VirtualGraph:
         node.build(builder)
         builder.add_edge(START, node.name)
         while node.next is not None:
-            print(f"> {node.name}", end="")
             node.next.build(builder)
             if node.next == END:
                 builder.add_edge(node.name, END)

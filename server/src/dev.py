@@ -12,14 +12,13 @@ class SimpleState(TypedDict):
 # 2. Define Basic Sequential Nodes
 def step_one(state: SimpleState):
     """Converts the message to uppercase."""
-    return {"message": state["message"].upper(), "status": "step_one_completed"}
+    return {"message": "1"}
 
 
 def step_two(state: SimpleState):
     """Appends a string to the message."""
     return {
-        "message": state["message"] + " - PROCESSED",
-        "status": "step_two_completed",
+        "message": "2",
     }
 
 

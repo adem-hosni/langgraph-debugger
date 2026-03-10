@@ -28,11 +28,14 @@ def get_graph_state(conn: HTTPConnection) -> CompiledStateGraph:
 @ws_router.websocket("/graph")
 async def ws_endpoint(websocket: WebSocket, graph: CompiledStateGraph = Depends(get_graph), graph_state_schema: Any = Depends(get_graph_state)):
     await websocket.accept()
+    context = {"graph": graph, "graph_state_schema": graph_state_schema}
     try:
         while True:
             data = json.loads(await websocket.receive_text())
-            result = await route_action(data, {"graph": graph, "graph_state_schema": graph_state_schema})
-            await websocket.send_text(json.dumps(result))
+            result = await route_action(data, context, lambda arg: websocket.send_text(json.dumps(arg)))
+            
+            if result and result["type"]:
+                await websocket.send_text(json.dumps(result))
     except WebSocketDisconnect:
         print("WebSocket disconnected")
     except Exception as err:
