@@ -25,18 +25,15 @@ class VirtualGraph:
 
         def findnode(name: str) -> VirtualNode:
             for node in virtual_nodes:
-                if node.name == f"VIRTUALNODE_{name}":
+                if node.name == name:
                     return node
 
         for a, b in edges:
             if b == END:
-                findnode(a).next = VirtualNode(END, lambda arg: arg)
                 continue
             if a == START:
-                start_node = VirtualNode(START, lambda arg: arg)
-                start_node.next = findnode(b)
+                start_node = findnode(b)
                 continue
-
             findnode(a).next = findnode(b)
 
         return start_node
@@ -56,9 +53,11 @@ class VirtualGraph:
         node = self.link_virtual_edges(virtual_nodes, edges)
         builder = StateGraph(state)
         node.build(builder)
+        builder.add_edge(START, node.name)
         while node.next is not None:
+            print(f"> {node.name}", end="")
             node.next.build(builder)
-            if node.next == f"VIRTUALNODE_{END}":
+            if node.next == END:
                 builder.add_edge(node.name, END)
             else:
                 builder.add_edge(node.name, node.next.name)
