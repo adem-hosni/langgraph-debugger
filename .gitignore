@@ -57,3 +57,6 @@ coverage/
 
 # Allow local config (uncomment to ignore everything except tracked files)
 # .gitignore_global
+
+
+*.cpython-313.pyc
