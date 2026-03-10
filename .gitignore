@@ -60,3 +60,4 @@ coverage/
 
 
 *.cpython-313.pyc
+*.pyc
