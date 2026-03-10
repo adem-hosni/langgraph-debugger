@@ -13,7 +13,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 
-def create_app(graph: CompiledStateGraph) -> FastAPI:
+def create_app(
+    graph: CompiledStateGraph, initial_graph_state: dict, graph_state_schema: Any
+) -> FastAPI:
     """Factory function to create the FastAPI app and inject the graph."""
     app = FastAPI(
         title=settings.PROJECT_NAME,
@@ -26,6 +28,8 @@ def create_app(graph: CompiledStateGraph) -> FastAPI:
     # Inject the compiled graph into the application state
     # This makes it globally accessible to your routes
     app.state.graph = graph
+    app.state.graph_state_schema = graph_state_schema
+    app.state.initial_graph_state = initial_graph_state
 
     # Configure CORS for the Lovable frontend
     app.add_middleware(
