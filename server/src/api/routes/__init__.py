@@ -8,6 +8,6 @@ RouteEntry: TypeAlias = tuple[APIRouter, str]
 routes: list[RouteEntry] = [
     (history.router, history.prefix),
     (chat.router, chat.prefix),
-    (graph.router, graph.prefix),
+    (graph.ws_router, graph.prefix),
     (aimodels.router, aimodels.prefix),
 ]
