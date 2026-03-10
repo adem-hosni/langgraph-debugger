@@ -14,7 +14,7 @@ from schemas.graph import (
     NodePosition
 )
 
-from services.graph_executor import route_action
+from services.action_router import route_action
 
 ws_router = APIRouter(tags=["Graph Debugger"])
 prefix = "/ws"

@@ -7,6 +7,9 @@ from schemas.graph import GraphData, NodeFlow, EdgeFlow, GraphNodeData, NodePosi
 from debugger.virtual_graph import VirtualGraph
 
 
+virtual_graph: VirtualGraph | None = None
+graph: CompiledStateGraph | None = None
+
 async def route_action(
     action_context: dict[str, Any], context: dict[str, CompiledStateGraph | Any]
 ) -> dict[str, Any]:
@@ -29,15 +32,21 @@ async def route_action(
 
             case "run":
                 print("running nodes...")
-                vg = VirtualGraph(context["graph"])
+                virtual_graph = VirtualGraph(context["graph"])
 
-                nodes = vg.build_virtual_nodes(context["graph"].builder.nodes)
-                graph = vg.compile_graph(
+                nodes = virtual_graph.build_virtual_nodes(context["graph"].builder.nodes)
+                graph = virtual_graph.compile_graph(
                     context["graph_state_schema"], nodes, context["graph"].builder.edges
                 )
+                
+                graph.st
 
-                result["type"] = "graph_data"
-                result["data"] = get_graph_metadata(graph)
+                result["type"] = "status"
+                result["message"] = "Execution Started.."
+            
+            case "update_state":
+                print("updating state...")
+                
 
             case _:
                 result["type"] = "error"
