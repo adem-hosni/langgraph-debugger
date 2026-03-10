@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
+from typing import Any
+import json
+import traceback
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Request, HTTPException
+from fastapi.requests import HTTPConnection
 from langgraph.graph.state import CompiledStateGraph
 
 # Import the Pydantic models we just built
@@ -10,14 +14,31 @@ from schemas.graph import (
     NodePosition
 )
 
-router = APIRouter(tags=["Graph Visualizer"])
-prefix = "/graph"
+from services.graph_executor import route_action
 
-def get_graph(request: Request) -> CompiledStateGraph:
-    return request.app.state.graph
+ws_router = APIRouter(tags=["Graph Debugger"])
+prefix = "/ws"
 
+def get_graph(conn: HTTPConnection) -> CompiledStateGraph:
+    return conn.app.state.graph
 
-@router.get("/info", response_model=GraphData)
+def get_graph_state(conn: HTTPConnection) -> CompiledStateGraph:
+    return conn.app.state.graph_state_schema
+
+@ws_router.websocket("/graph")
+async def ws_endpoint(websocket: WebSocket, graph: CompiledStateGraph = Depends(get_graph), graph_state_schema: Any = Depends(get_graph_state)):
+    await websocket.accept()
+    try:
+        while True:
+            data = json.loads(await websocket.receive_text())
+            result = await route_action(data, {"graph": graph, "graph_state_schema": graph_state_schema})
+            await websocket.send_text(json.dumps(result))
+    except WebSocketDisconnect:
+        print("WebSocket disconnected")
+    except Exception as err:
+        traceback.print_exc()
+
+@ws_router.get("/info", response_model=GraphData)
 async def get_graph_metadata(graph: CompiledStateGraph = Depends(get_graph)):
     """
     Inspects the injected LangGraph and dynamically generates the React Flow
