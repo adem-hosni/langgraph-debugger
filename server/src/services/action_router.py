@@ -43,9 +43,15 @@ async def route_action(
                     result["message"] = "Failed to execute graph!"
 
             case "update_state":
-                print(action_ctx)
                 executor.insert_state_hook(
                     {"nodeId": action_ctx["nodeId"], "updates": action_ctx["state"]}
+                )
+                await send(
+                    {
+                        "type": "node_state_update",
+                        "data": {"input": action_ctx["state"]},
+                        "nodeId": action_ctx["nodeId"],
+                    }
                 )
 
             case "set_breakpoint":
