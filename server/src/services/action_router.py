@@ -22,15 +22,15 @@ def get_node(node_id: str, virtual_graph: VirtualGraph) -> VirtualNode | None:
 
 
 async def route_action(
-    action_context: dict[str, Any],
-    context: dict[str, CompiledStateGraph | Any],
+    action_ctx: dict[str, Any],
+    context: dict[str, VirtualGraph | CompiledStateGraph | Any],
     send: Callable[[str], Coroutine[Any, Any, None]],
 ) -> dict[str, Any]:
     """
     Routes incoming WebSocket messages to the appropriate graph actions.
     """
     try:
-        action_type = action_context.get("action")
+        action_type = action_ctx.get("action")
         result = {"type": "", "message": "", "data": {}}
 
         virtual_graph = context.get("virtual_graph")
@@ -56,11 +56,14 @@ async def route_action(
                     result["message"] = "Failed to execute graph!"
 
             case "update_state":
-                print("updating state...")
+                print(action_ctx)
+                executor.insert_state_hook(
+                    {"nodeId": action_ctx["nodeId"], "updates": action_ctx["state"]}
+                )
 
             case "set_breakpoint":
                 print("setting breakpoint")
-                node = virtual_graph[action_context["nodeId"]]
+                node = virtual_graph[action_ctx["nodeId"]]
                 if node:
                     node.set_breakpoint(True)
                 else:
@@ -71,7 +74,7 @@ async def route_action(
 
             case "remove_breakpoint":
                 print("removing breakpoint")
-                node = virtual_graph[action_context["nodeId"]]
+                node = virtual_graph[action_ctx["nodeId"]]
                 if node:
                     node.set_breakpoint(False)
                 else:
@@ -83,7 +86,7 @@ async def route_action(
             case _:
                 result["type"] = "error"
                 result["message"] = "Unknown action type"
-                print(f"Unknown action type {action_context}")
+                print(f"Unknown action type {action_ctx}")
 
     except Exception as e:
         print("error:", e)
