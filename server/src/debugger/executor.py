@@ -4,7 +4,7 @@ from .virtual_graph import VirtualGraph
 from .virtual_node import VirtualNode
 
 import asyncio
-from typing import Any, TypeAlias, Callable, Awaitable
+from typing import TypeAlias, Any
 
 
 GraphState: TypeAlias = dict[str, Any]
@@ -34,7 +34,6 @@ class Executor:
         asyncio.create_task(self.graph.ainvoke(state, stream_mode="updates"))
 
     async def on_node_pre_executed(self, node: VirtualNode):
-        print("pre", node.name, node.output_state)
         packet = {
             "nodeId": node.name,
             "state": node.output_state,
@@ -48,7 +47,6 @@ class Executor:
         await self._state_update_func(packet)
 
     async def on_node_post_executed(self, node: VirtualNode):
-        print("post", node.name, node.output_state)
         packet = {
             "nodeId": node.name,
             "state": node.output_state,

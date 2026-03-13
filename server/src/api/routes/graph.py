@@ -41,7 +41,6 @@ async def ws_endpoint(
             result = await route_action(
                 data, context, lambda arg: websocket.send_text(json.dumps(arg))
             )
-
             if result and result["type"]:
                 await websocket.send_text(json.dumps(result))
     except WebSocketDisconnect:
@@ -50,10 +49,12 @@ async def ws_endpoint(
         traceback.print_exc()
 
 
-def initialize_context(websocket: WebSocket, graph: VirtualGraph, graph_state_schema: Any) -> dict[str, Executor | VirtualGraph]:
+def initialize_context(
+    websocket: WebSocket, graph: VirtualGraph, graph_state_schema: Any
+) -> dict[str, Executor | VirtualGraph | CompiledStateGraph]:
     ctx = {"graph": graph, "graph_state_schema": graph_state_schema}
     send = lambda arg: websocket.send_text(json.dumps(arg))
-    
+
     ctx["executor"] = Executor(
         ctx["graph"],
         ctx["graph_state_schema"],
@@ -67,5 +68,5 @@ def initialize_context(websocket: WebSocket, graph: VirtualGraph, graph_state_sc
         ctx["executor"].on_node_post_executed,
     )
     ctx["executor"].set_virtual_graph(ctx["virtual_graph"])
-    
+
     return ctx
