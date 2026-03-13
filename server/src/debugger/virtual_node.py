@@ -39,15 +39,16 @@ class VirtualNode:
 
     async def __call__(self, *args, **kwds):
         self.input_state = args[0]
+        result = self.input_state
         try:
             if self.breakpoint:
                 while self.breakpoint:
                     await asyncio.sleep(0.1)
             await self.on_pre_execute(self)
-            self.output_state = self.func(self.input_state)
-            await self.on_post_execute(self)
-            return self.output_state
+            result = self.func(self.input_state)
+            self.output_state = result
         except Exception as err:
-            self.error = err
+            self.error = traceback.format_exc()
             traceback.print_exc()
-        return self.input_state
+        await self.on_post_execute(self)
+        return result
