@@ -46,3 +46,6 @@ Thumbs.db
 
 database.db
 *.cpython-313.pyc
+*.pyc
+
+/__pycache__/

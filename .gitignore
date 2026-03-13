@@ -59,5 +59,8 @@ coverage/
 # .gitignore_global
 
 
+__pycache__/
 *.cpython-313.pyc
 *.pyc
+*.pyo
+*.pyd

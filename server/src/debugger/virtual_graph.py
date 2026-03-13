@@ -23,7 +23,6 @@ class VirtualGraph:
     def build_virtual_nodes(
         self, nodes: Optional[dict[str, StateNodeSpec[Any, None]]] = None
     ) -> list[VirtualNode]:
-
         return [
             self.compile_node(*n) for n in (nodes or self.graph.builder.nodes).items()
         ]
@@ -31,7 +30,6 @@ class VirtualGraph:
     def link_virtual_edges(self) -> VirtualNode:
         node: VirtualNode | None = None
         virtual_nodes = self.build_virtual_nodes()
-
         for a, b in self.graph.builder.edges:
             if b == END:
                 continue
@@ -39,7 +37,6 @@ class VirtualGraph:
                 node = self[b, virtual_nodes]
                 continue
             self[a, virtual_nodes].next = self[b, virtual_nodes]
-
         return node
 
     def compile_node(
@@ -57,7 +54,6 @@ class VirtualGraph:
         )
 
     def compile_graph(self, state: Any) -> CompiledStateGraph:
-        print("compiling...")
         node = self.start_node = self.link_virtual_edges()
         builder = StateGraph(state)
         node.build(builder)
@@ -86,7 +82,6 @@ class VirtualGraph:
             virtual_nodes = self
         if isinstance(key, slice) or isinstance(key, tuple):
             target_node, virtual_nodes = key
-
         for node in virtual_nodes:
             if node.name == target_node:
                 return node
