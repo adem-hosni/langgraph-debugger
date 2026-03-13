@@ -18,14 +18,14 @@ def step_one(state: SimpleState):
 def step_two(state: SimpleState):
     """Appends a string to the message."""
     return {
-        "message": "2",
+        "message": f"{state['message']} - 2",
     }
 
 
 def step_three(state: SimpleState):
     """Appends a string to the message."""
     return {
-        "message": "3",
+        "message": f"{state['message']} - 3",
     }
 
 
