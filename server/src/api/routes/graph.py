@@ -44,7 +44,7 @@ async def ws_endpoint(
         context["graph"],
         context["graph_state_schema"],
         state_update_func=lambda data: send(
-            {"type": "node_state_update", "data": data}
+            {"type": "node_state_update", "data": data, "nodeId": data["nodeId"]}
         ),
     )
     context["virtual_graph"] = VirtualGraph(

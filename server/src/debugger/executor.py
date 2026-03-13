@@ -56,7 +56,7 @@ class Executor:
             "output": node.output_state,
             "error": node.error,
             "hasBreakpoint": node.breakpoint,
-            "status": "error" if self.error else "success",
-            "label": f"{node.name}",
+            "status": "error" if node.error else "success",
+            "label": node.name,
         }
         await self._state_update_func(packet)
