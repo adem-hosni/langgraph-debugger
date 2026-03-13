@@ -1,4 +1,4 @@
-import time
+import traceback
 
 from langgraph.graph import StateGraph
 from langgraph._internal._runnable import RunnableCallable
@@ -43,11 +43,11 @@ class VirtualNode:
             if self.breakpoint:
                 while self.breakpoint:
                     await asyncio.sleep(0.1)
-            
             await self.on_pre_execute(self)
-            self.output_state = self.func(*args, **kwds)
+            self.output_state = self.func(self.input_state)
             await self.on_post_execute(self)
             return self.output_state
         except Exception as err:
             self.error = err
+            traceback.print_exc()
         return self.input_state
