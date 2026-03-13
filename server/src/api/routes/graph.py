@@ -6,16 +6,12 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Depends,
-    Request,
-    HTTPException,
 )
 from fastapi.requests import HTTPConnection
 from langgraph.graph.state import CompiledStateGraph
+
 from debugger.executor import Executor
 from debugger.virtual_graph import VirtualGraph
-
-# Import the Pydantic models we just built
-from schemas.graph import GraphData, NodeFlow, EdgeFlow, GraphNodeData, NodePosition
 
 from services.action_router import route_action
 
@@ -38,21 +34,7 @@ async def ws_endpoint(
     graph_state_schema: Any = Depends(get_graph_state),
 ):
     await websocket.accept()
-    context = {"graph": graph, "graph_state_schema": graph_state_schema}
-    send = lambda arg: websocket.send_text(json.dumps(arg))
-    context["executor"] = Executor(
-        context["graph"],
-        context["graph_state_schema"],
-        state_update_func=lambda data: send(
-            {"type": "node_state_update", "data": data, "nodeId": data["nodeId"]}
-        ),
-    )
-    context["virtual_graph"] = VirtualGraph(
-        context["graph"],
-        context["executor"].on_node_pre_executed,
-        context["executor"].on_node_post_executed,
-    )
-    context["executor"].set_virtual_graph(context["virtual_graph"])
+    context = initialize_context(websocket, graph, graph_state_schema)
     try:
         while True:
             data = json.loads(await websocket.receive_text())
@@ -66,3 +48,24 @@ async def ws_endpoint(
         print("WebSocket disconnected")
     except Exception as err:
         traceback.print_exc()
+
+
+def initialize_context(websocket: WebSocket, graph: VirtualGraph, graph_state_schema: Any) -> dict[str, Executor | VirtualGraph]:
+    ctx = {"graph": graph, "graph_state_schema": graph_state_schema}
+    send = lambda arg: websocket.send_text(json.dumps(arg))
+    
+    ctx["executor"] = Executor(
+        ctx["graph"],
+        ctx["graph_state_schema"],
+        state_update_func=lambda data: send(
+            {"type": "node_state_update", "data": data, "nodeId": data["nodeId"]}
+        ),
+    )
+    ctx["virtual_graph"] = VirtualGraph(
+        ctx["graph"],
+        ctx["executor"].on_node_pre_executed,
+        ctx["executor"].on_node_post_executed,
+    )
+    ctx["executor"].set_virtual_graph(ctx["virtual_graph"])
+    
+    return ctx
