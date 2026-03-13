@@ -24,6 +24,7 @@ class Executor:
 
     def set_virtual_graph(self, virtual_graph: VirtualGraph):
         self.virtual_graph = virtual_graph
+        self._compile_graph()
 
     def _compile_graph(self) -> None:
         nodes = self.virtual_graph.build_virtual_nodes(self.graph.builder.nodes)
@@ -32,8 +33,7 @@ class Executor:
         )
 
     async def execute(self, state: GraphState):
-        self._compile_graph()
-        await self.graph.ainvoke(state, stream_mode="updates")
+        asyncio.create_task(self.graph.ainvoke(state, stream_mode="updates"))
 
     async def on_node_executed(self, node: VirtualNode):
         print("running", node.name, node.output_state)

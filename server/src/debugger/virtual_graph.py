@@ -12,6 +12,7 @@ class VirtualGraph:
     def __init__(self, graph: CompiledStateGraph, on_node_executed: Callable[[VirtualNode], Any]):
         self.graph = graph
         self._on_node_executed = on_node_executed
+        self.start_node: VirtualNode | None = None
 
     def build_virtual_nodes(
         self, nodes: dict[str, StateNodeSpec[Any, None]]
@@ -51,9 +52,10 @@ class VirtualGraph:
     def compile_graph(
         self, state: Any, virtual_nodes: VirtualNode, edges: set[tuple[str, str]]
     ) -> CompiledStateGraph:
-        node = self.link_virtual_edges(virtual_nodes, edges)
+        print("compiling...")
+        node = self.start_node = self.link_virtual_edges(virtual_nodes, edges)
         builder = StateGraph(state)
-        node.build(builder)
+        node.build(builder)  
         builder.add_edge(START, node.name)
         while node.next is not None:
             node.next.build(builder)

@@ -31,6 +31,7 @@ class GraphNodeData(CamelBaseModel):
     output: dict[str, Any] | None = None
     state: dict[str, Any] | None = None
     error: str | None = None
+    has_breakpoint: bool = False
 
 
 # ─── React Flow Wrappers ──────────────────────────────────────────────────

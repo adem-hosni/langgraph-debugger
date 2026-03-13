@@ -22,15 +22,24 @@ def step_two(state: SimpleState):
     }
 
 
+def step_three(state: SimpleState):
+    """Appends a string to the message."""
+    return {
+        "message": "3",
+    }
+
+
 # 3. Build a Linear Graph
 builder = StateGraph(SimpleState)
 
 builder.add_node("step_one", step_one)
 builder.add_node("step_two", step_two)
+builder.add_node("step_three", step_three)
 
 # Straight line execution: START -> step_one -> step_two -> END
 builder.add_edge(START, "step_one")
 builder.add_edge("step_one", "step_two")
+builder.add_edge("step_two", "step_three")
 builder.add_edge("step_two", END)
 
 # 4. Compile the graph (No checkpointer)

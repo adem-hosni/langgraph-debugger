@@ -1,3 +1,5 @@
+import time
+
 from langgraph.graph import StateGraph
 from langgraph._internal._runnable import RunnableCallable
 
@@ -27,17 +29,21 @@ class VirtualNode:
     def build(self, builder: StateGraph):
         builder.add_node(self.name, self)
 
+    def set_breakpoint(self, value: bool):
+        self.breakpoint = value
+
     def __repr__(self) -> str:
-        return f'VirtualNode(name="{self.name}", func={self.func})'
+        return f'VirtualNode(name="{self.name}", func={self.func}, breakpoint={self.breakpoint})'
 
     async def __call__(self, *args, **kwds):
         self.input_state = args[0]
         try:
+            if self.breakpoint:
+                while self.breakpoint:
+                    await asyncio.sleep(0.1)
             self.output_state = self.func(*args, **kwds)
             await self.on_post_execute(self)
-            
             return self.output_state
         except Exception as err:
             self.error = err
         return self.input_state
- 
