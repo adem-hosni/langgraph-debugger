@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:8080",
+        "http://127.0.0.1:8080",
     ]
 
     DEBUG: bool = True
