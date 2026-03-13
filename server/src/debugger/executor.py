@@ -28,15 +28,13 @@ class Executor:
 
     def _compile_graph(self) -> None:
         nodes = self.virtual_graph.build_virtual_nodes(self.graph.builder.nodes)
-        self.graph = self.virtual_graph.compile_graph(
-            self._state_schema, nodes, self.graph.builder.edges
-        )
+        self.graph = self.virtual_graph.compile_graph(self._state_schema)
 
     async def execute(self, state: GraphState):
         asyncio.create_task(self.graph.ainvoke(state, stream_mode="updates"))
 
-    async def on_node_executed(self, node: VirtualNode):
-        print("running", node.name, node.output_state)
+    async def on_node_pre_executed(self, node: VirtualNode):
+        print("pre", node.name, node.output_state)
         packet = {
             "nodeId": node.name,
             "state": node.output_state,
@@ -45,5 +43,20 @@ class Executor:
             "error": node.error,
             "hasBreakpoint": node.breakpoint,
             "status": "running",
+            "label": f"Running {node.name}",
+        }
+        await self._state_update_func(packet)
+
+    async def on_node_post_executed(self, node: VirtualNode):
+        print("post", node.name, node.output_state)
+        packet = {
+            "nodeId": node.name,
+            "state": node.output_state,
+            "input": node.input_state,
+            "output": node.output_state,
+            "error": node.error,
+            "hasBreakpoint": node.breakpoint,
+            "status": "error" if self.error else "success",
+            "label": f"{node.name}",
         }
         await self._state_update_func(packet)

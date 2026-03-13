@@ -20,6 +20,7 @@ def get_node(node_id: str, virtual_graph: VirtualGraph) -> VirtualNode | None:
         node = node.next
     return node if node.name == node_id else None
 
+
 async def route_action(
     action_context: dict[str, Any],
     context: dict[str, CompiledStateGraph | Any],
@@ -32,13 +33,13 @@ async def route_action(
         action_type = action_context.get("action")
         result = {"type": "", "message": "", "data": {}}
 
+        virtual_graph = context.get("virtual_graph")
+        executor = context.get("executor")
+
         match action_type:
             case "fetch":
                 result["type"] = "graph_data"
-
-                result["data"] = get_graph_metadata(
-                    context["graph"], context["virtual_graph"]
-                )
+                result["data"] = get_graph_metadata(context["graph"], virtual_graph)
 
                 if not result["data"]:
                     result["type"] = "error"
@@ -47,9 +48,9 @@ async def route_action(
             case "run":
                 print("running nodes...")
 
-                if context.get("executor"):
+                if executor:
                     await send({"type": "status", "message": "Execution Started..."})
-                    await context["executor"].execute({"message": "0"})
+                    await executor.execute({"message": "0"})
                 else:
                     result["type"] = "error"
                     result["message"] = "Failed to execute graph!"
@@ -59,21 +60,25 @@ async def route_action(
 
             case "set_breakpoint":
                 print("setting breakpoint")
-                node = get_node(action_context["nodeId"], context.get("virtual_graph"))
+                node = virtual_graph[action_context["nodeId"]]
                 if node:
                     node.set_breakpoint(True)
                 else:
                     result["type"] = "error"
-                    result["message"] = "Failed to set breakpoint, maybe the graph is not compiled yet"
+                    result["message"] = (
+                        "Failed to set breakpoint, maybe the graph is not compiled yet"
+                    )
 
             case "remove_breakpoint":
                 print("removing breakpoint")
-                node = get_node(action_context["nodeId"], context.get("virtual_graph"))
+                node = virtual_graph[action_context["nodeId"]]
                 if node:
                     node.set_breakpoint(False)
                 else:
                     result["type"] = "error"
-                    result["message"] = "Failed to set breakpoint, maybe the graph is not compiled yet"
+                    result["message"] = (
+                        "Failed to set breakpoint, maybe the graph is not compiled yet"
+                    )
 
             case _:
                 result["type"] = "error"
@@ -159,7 +164,7 @@ def get_graph_metadata(graph: CompiledStateGraph, virtual_graph: VirtualGraph):
             node_type = "agent"
             label = node_id.replace("_", " ").title()
 
-        node = get_node(node_id, virtual_graph) or {}
+        node = virtual_graph[node_id]
         nodes.append(
             NodeFlow(
                 id=node_id,

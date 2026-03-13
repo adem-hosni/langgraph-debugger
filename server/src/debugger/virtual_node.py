@@ -12,6 +12,7 @@ class VirtualNode:
         self,
         name: str,
         func: RunnableCallable,
+        on_pre_execute: Callable[[Self], Any],
         on_post_execute: Callable[[Self], Any],
         next_node: Optional[Self] = None,
         breakpoint: Optional[bool] = False,
@@ -23,6 +24,7 @@ class VirtualNode:
         self.breakpoint = breakpoint
         self.input_state: dict[str, Any] = {}
         self.output_state: dict[str, Any] = {}
+        self.on_pre_execute = on_pre_execute
         self.on_post_execute = on_post_execute
         self.error = ""
 
@@ -41,6 +43,8 @@ class VirtualNode:
             if self.breakpoint:
                 while self.breakpoint:
                     await asyncio.sleep(0.1)
+            
+            await self.on_pre_execute(self)
             self.output_state = self.func(*args, **kwds)
             await self.on_post_execute(self)
             return self.output_state

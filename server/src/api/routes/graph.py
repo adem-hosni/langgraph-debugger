@@ -48,7 +48,9 @@ async def ws_endpoint(
         ),
     )
     context["virtual_graph"] = VirtualGraph(
-        context["graph"], context["executor"].on_node_executed
+        context["graph"],
+        context["executor"].on_node_pre_executed,
+        context["executor"].on_node_post_executed,
     )
     context["executor"].set_virtual_graph(context["virtual_graph"])
     try:
