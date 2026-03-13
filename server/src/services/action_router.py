@@ -8,19 +8,6 @@ from debugger.virtual_graph import VirtualGraph
 from debugger.virtual_node import VirtualNode
 
 
-def get_node(node_id: str, virtual_graph: VirtualGraph) -> VirtualNode | None:
-    if not virtual_graph:
-        return
-    node = virtual_graph.start_node
-    if not node:
-        return
-    while node.next is not None:
-        if node.name == node_id:
-            return node
-        node = node.next
-    return node if node.name == node_id else None
-
-
 async def route_action(
     action_ctx: dict[str, Any],
     context: dict[str, VirtualGraph | CompiledStateGraph | Any],
