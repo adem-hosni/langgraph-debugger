@@ -5,7 +5,6 @@ from langgraph.graph.state import CompiledStateGraph
 # Import the Pydantic models we just built
 from schemas.graph import GraphData, NodeFlow, EdgeFlow, GraphNodeData, NodePosition
 from debugger.virtual_graph import VirtualGraph
-from debugger.virtual_node import VirtualNode
 
 
 async def route_action(
