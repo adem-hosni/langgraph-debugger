@@ -1,59 +1,44 @@
 # LangGraph Debugger
 
-A lightweight monorepo containing a Vite/Bun React client and a Python server for graph debugging and chat UI.
+# LangGraph Debugger
 
-## Layout
-- `client/` — frontend (Vite + TypeScript + React)
-- `server/` — backend (Python; see `pyproject.toml`)
+LangGraph Debugger is a developer tool for building, running and
+observing stateful execution graphs. It pairs a TypeScript/React
+frontend with a Python ASGI backend that compiles and executes state
+graphs while exposing debug hooks (breakpoints, state injection,
+progress events) to the UI.
 
-## Prerequisites
-- Node 18+ (or Bun if you prefer)
-- Python 3.10+
-- Git
+This repository contains two main projects:
 
-## Quickstart
-### Client (frontend)
-1. Change into the client folder:
+- `client/` — the web-based UI (React + TypeScript + Vite).
+- `server/` — Python backend with the execution engine and websocket
+	API.
+
+See the `docs/` folder for full documentation and setup instructions:
+
+- `docs/index.md` — documentation entry point.
+
+Quick start (development)
+
+Client
 
 ```bash
 cd client
-```
-
-2. Install dependencies and run dev server:
-
-```bash
-# using npm
 npm install
 npm run dev
-
-# -- or using bun --
-bun install
-bun run dev
 ```
 
-### Server (backend)
-The server's dependencies are declared in `server/pyproject.toml`.
-
-Windows (convenience): run the included batch script:
-
-```powershell
-# from repo root
-server\run.bat
-```
-
-Or run in a virtual environment:
+Server
 
 ```bash
 cd server
 python -m venv .venv
-.\.venv\Scripts\activate  # Windows
-pip install -r requirements.txt  # if you generated one from pyproject.toml
+. .venv/bin/activate   # on Windows: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 python -m src.dev
 ```
 
-## Development notes
-- Frontend uses Vite + TypeScript. See `client/package.json` for scripts.
-- Backend uses a `pyproject.toml` (choose pip/Poetry/other to install).
+Contributing
 
-## Contributing
-Open an issue or submit a PR with a concise description of your change.
+See `docs/contributing.md` for contribution guidelines and PR
+checklists.
