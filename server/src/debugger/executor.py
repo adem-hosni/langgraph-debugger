@@ -134,6 +134,5 @@ class Executor:
             "error": node.error,
             "hasBreakpoint": node.breakpoint,
             "status": "error" if node.error else "success",
-            "label": node.name,
         }
         await self._state_update_func(packet)
