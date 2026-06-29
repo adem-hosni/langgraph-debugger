@@ -184,6 +184,24 @@ def get_graph_metadata(graph: CompiledStateGraph, virtual_graph: VirtualGraph):
         edge_id = f"e-{edge.source}-{edge.target}"
         style = {"stroke": "hsl(0, 0%, 40%)"}
         animated = False
+        edge_type = "default"  # Assuming standard bezier
+
+        # 1. Detect if this is a cyclical back-edge
+        source_level = node_levels.get(edge.source, 0)
+        target_level = node_levels.get(edge.target, 0)
+
+        # If the target is at the same or a higher level (lower index), it's a loop
+        is_back_edge = target_level <= source_level
+
+        if is_back_edge:
+            # Use a step or smoothstep edge so it routes around nodes instead of through them
+            edge_type = "smoothstep"
+            style["stroke"] = (
+                "hsl(35, 90%, 50%)"  # Optional: color it orange to highlight the loop
+            )
+
+            # NOTE: If your frontend nodes have left/right connection points,
+            # pass sourceHandle="left" and targetHandle="left" here to make it loop cleanly on the side.
 
         if edge.source == "__start__":
             style["stroke"] = "hsl(142, 71%, 45%)"
@@ -196,6 +214,7 @@ def get_graph_metadata(graph: CompiledStateGraph, virtual_graph: VirtualGraph):
                 target=edge.target,
                 animated=animated,
                 style=style,
+                type=edge_type,  # Pass the new edge type (requires updating your EdgeFlow Pydantic model)
             )
         )
 
