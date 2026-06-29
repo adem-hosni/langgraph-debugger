@@ -9,6 +9,10 @@
 
 **LangGraph Debugger** is a real-time visual debugger and development environment for [LangGraph](https://langchain-ai.github.io/langgraph/) stateful execution graphs. It combines a Python ASGI backend with a React/TypeScript frontend to provide step-through execution, breakpoints, state inspection, and a chat interface — all in one tool.
 
+<p align="center">
+  <img src="images/screenshot.png" alt="LangGraph Debugger Interface" width="800">
+</p>
+
 ---
 
 ## Features
